@@ -1,0 +1,12 @@
+{
+  "features": [
+    "PrincipalAmount_INR",
+    "InterestRate",
+    "LoanToBalanceRatio",
+    "TxnFrequency_90d",
+    "AvgTxnAmount_INR",
+    "AccountTypeID",
+    "LoanDurationDays"
+  ],
+  "best_model": "Decision Tree"
+}

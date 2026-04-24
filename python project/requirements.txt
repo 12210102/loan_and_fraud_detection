@@ -1,0 +1,14 @@
+pandas
+numpy
+scikit-learn
+xgboost
+sqlalchemy
+mysql-connector-python
+flask
+flask-cors
+joblib
+matplotlib
+seaborn
+imbalanced-learn
+python-dotenv
+gunicorn

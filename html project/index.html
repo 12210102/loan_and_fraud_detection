@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BankGuard Analytics | Loan & Fraud Detection Dashboard</title>
+  <meta name="description" content="Advanced Banking Loan & Fraud Detection Analytics Dashboard — Interactive visualization of 50,000+ synthetic financial transactions." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="bg-particles" id="bgParticles"></div>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="40" rx="10" fill="url(#logoGrad)"/>
+          <path d="M8 28L16 18L22 24L30 12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="30" cy="12" r="3" fill="white"/>
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#6366f1"/>
+              <stop offset="1" stop-color="#8b5cf6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <span class="logo-title">BankGuard</span>
+        <span class="logo-subtitle">Analytics</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+      <a href="#dashboard" class="nav-link active" id="nav-dashboard" onclick="showSection('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <div class="nav-section-label">Analytics</div>
+      <a href="#transactions" class="nav-link" id="nav-transactions" onclick="showSection('transactions')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6l4-4 4 4"/><path d="M16 18l-4 4-4-4"/><path d="M12 2v20"/></svg>
+        Transactions
+      </a>
+      <a href="#loans" class="nav-link" id="nav-loans" onclick="showSection('loans')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/><circle cx="12" cy="12" r="4"/></svg>
+        Loan Risk
+      </a>
+      <a href="#accounts" class="nav-link" id="nav-accounts" onclick="showSection('accounts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+        Accounts
+      </a>
+      <a href="#fraud" class="nav-link" id="nav-fraud" onclick="showSection('fraud')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Fraud Monitor
+      </a>
+      <div class="nav-section-label">Project</div>
+      <a href="#roadmap" class="nav-link" id="nav-roadmap" onclick="showSection('roadmap')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20M12 12l8-8M12 12l-8 8"/></svg>
+        Project Roadmap
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="dataset-info">
+        <div class="dataset-badge">Live Dataset</div>
+        <div class="dataset-stats">50,000 transactions • 1,111 customers</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="breadcrumb" id="breadcrumb">Dashboard</div>
+      </div>
+      <div class="header-right">
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Search analytics..." id="searchInput" />
+        </div>
+        <div class="header-chip">
+          <span class="chip-dot pulse"></span>
+          Live Data
+        </div>
+        <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+          <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </div>
+      </div>
+    </header>
+
+    <!-- SECTION: Dashboard -->
+    <section class="section active" id="section-dashboard">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Executive Dashboard</h1>
+          <p class="section-subtitle">Real-time overview of banking operations &amp; risk metrics — All values in Indian Rupees (₹)</p>
+        </div>
+        <div class="section-actions">
+          <span class="data-tag">Dataset: Kaggle Finance Fraud &amp; Loans | 1 USD = ₹84</span>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card" style="--card-color: #6366f1">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="kpi-content">
+            <div class="kpi-label">Total Customers</div>
+            <div class="kpi-value" data-target="1111">0</div>
+            <div class="kpi-change positive">+12% YoY</div>
+          </div>
+          <div class="kpi-sparkline">
+            <canvas id="spark1" width="80" height="30"></canvas>
+          </div>
+        </div>
+        <div class="kpi-card" style="--card-color: #10b981">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+          <div class="kpi-content">
+            <div class="kpi-label">Total Accounts</div>
+            <div class="kpi-value" data-target="1667">0</div>
+            <div class="kpi-change positive">+8.3% YoY</div>
+          </div>
+          <div class="kpi-sparkline">
+            <canvas id="spark2" width="80" height="30"></canvas>
+          </div>
+        </div>
+        <div class="kpi-card" style="--card-color: #f59e0b">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="kpi-content">
+            <div class="kpi-label">Total Portfolio (AUM)</div>
+            <div class="kpi-value money" data-target="81803814">₹0</div>
+            <div class="kpi-change positive">₹6,871 Cr Total AUM</div>
+          </div>
+          <div class="kpi-sparkline">
+            <canvas id="spark3" width="80" height="30"></canvas>
+          </div>
+        </div>
+        <div class="kpi-card" style="--card-color: #ef4444">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <div class="kpi-content">
+            <div class="kpi-label">Fraud Risk Loans</div>
+            <div class="kpi-value" data-target="34">0</div>
+            <div class="kpi-change negative">10.2% Default Rate</div>
+          </div>
+          <div class="kpi-sparkline">
+            <canvas id="spark4" width="80" height="30"></canvas>
+          </div>
+        </div>
+        <div class="kpi-card" style="--card-color: #3b82f6">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+          <div class="kpi-content">
+            <div class="kpi-label">Total Transactions</div>
+            <div class="kpi-value" data-target="50000">0</div>
+            <div class="kpi-change positive">50K Records</div>
+          </div>
+          <div class="kpi-sparkline">
+            <canvas id="spark5" width="80" height="30"></canvas>
+          </div>
+        </div>
+        <div class="kpi-card" style="--card-color: #8b5cf6">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+          <div class="kpi-content">
+            <div class="kpi-label">Total Loans</div>
+            <div class="kpi-value" data-target="333">0</div>
+            <div class="kpi-change positive">₹1,448 Cr Outstanding</div>
+          </div>
+          <div class="kpi-sparkline">
+            <canvas id="spark6" width="80" height="30"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Charts Row -->
+      <div class="charts-row">
+        <div class="chart-card wide">
+          <div class="chart-header">
+            <div>
+              <h3 class="chart-title">Transaction Volume by Type (2023)</h3>
+              <p class="chart-desc">Monthly breakdown of all financial activity — 50K transactions analyzed</p>
+            </div>
+            <div class="chart-legend">
+              <span class="legend-dot" style="background:#6366f1"></span>Deposits
+              <span class="legend-dot" style="background:#ef4444"></span>Withdrawals
+              <span class="legend-dot" style="background:#10b981"></span>Transfers
+              <span class="legend-dot" style="background:#f59e0b"></span>Payments
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="transactionChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <h3 class="chart-title">Transaction Type Share</h3>
+              <p class="chart-desc">Count distribution</p>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="typeDonutChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Row -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <h3 class="chart-title">Customer Segments</h3>
+              <p class="chart-desc">By customer type</p>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="customerTypeChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <h3 class="chart-title">Account Balance Distribution</h3>
+              <p class="chart-desc">Across 1,667 accounts</p>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="balanceDistChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <h3 class="chart-title">Account Status Breakdown</h3>
+              <p class="chart-desc">Active vs closed accounts</p>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="accountStatusChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: Transactions -->
+    <section class="section" id="section-transactions">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Transaction Analytics</h1>
+          <p class="section-subtitle">Deep dive into 50,000 financial transactions across 50 branches</p>
+        </div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card wide">
+          <div class="chart-header">
+            <div>
+              <h3 class="chart-title">Annual Transaction Volume Trend</h3>
+              <p class="chart-desc">Total transaction amounts by year (2023–2026)</p>
+            </div>
+            <div class="chart-controls">
+              <button class="ctrl-btn active" onclick="updateYearChart('amount',this)">Amount</button>
+              <button class="ctrl-btn" onclick="updateYearChart('count',this)">Count</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="yearlyChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div><h3 class="chart-title">Top 10 Branches</h3><p class="chart-desc">By transaction volume</p></div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="branchChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <!-- Transaction Table Preview -->
+      <div class="table-card">
+        <div class="table-header">
+          <h3 class="chart-title">Recent Transactions Feed</h3>
+          <div class="table-filter">
+            <select id="txTypeFilter" onchange="filterTransactions()">
+              <option value="all">All Types</option>
+              <option value="Deposit">Deposit</option>
+              <option value="Withdrawal">Withdrawal</option>
+              <option value="Transfer">Transfer</option>
+              <option value="Payment">Payment</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="txTable">
+            <thead>
+              <tr>
+                <th>Txn ID</th>
+                <th>Origin Account</th>
+                <th>Destination Account</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Branch</th>
+              </tr>
+            </thead>
+            <tbody id="txTableBody"></tbody>
+          </table>
+        </div>
+        <div class="table-pagination">
+          <button class="page-btn" id="prevPage" onclick="changePage(-1)">← Prev</button>
+          <span id="pageInfo">Page 1 of 10</span>
+          <button class="page-btn" id="nextPage" onclick="changePage(1)">Next →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: Loans -->
+    <section class="section" id="section-loans">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Loan Risk Dashboard</h1>
+          <p class="section-subtitle">Credit risk analysis — 333 loans, ₹1,448 Cr outstanding portfolio</p>
+        </div>
+      </div>
+      <!-- Loan KPIs -->
+      <div class="loan-kpi-row">
+        <div class="loan-kpi-card active-loan">
+          <div class="loan-kpi-label">Active Loans</div>
+          <div class="loan-kpi-num">242</div>
+          <div class="loan-kpi-pct">72.7%</div>
+        </div>
+        <div class="loan-kpi-card paidoff-loan">
+          <div class="loan-kpi-label">Paid Off</div>
+          <div class="loan-kpi-num">57</div>
+          <div class="loan-kpi-pct">17.1%</div>
+        </div>
+        <div class="loan-kpi-card overdue-loan">
+          <div class="loan-kpi-label">Overdue</div>
+          <div class="loan-kpi-num">34</div>
+          <div class="loan-kpi-pct">10.2%</div>
+        </div>
+        <div class="loan-kpi-card avg-loan">
+          <div class="loan-kpi-label">Avg Interest Rate</div>
+          <div class="loan-kpi-num">8.97%</div>
+          <div class="loan-kpi-pct">Avg across portfolio</div>
+        </div>
+        <div class="loan-kpi-card total-loan">
+          <div class="loan-kpi-label">Total Outstanding</div>
+          <div class="loan-kpi-num">₹1,448 Cr</div>
+          <div class="loan-kpi-pct">Principal Amount</div>
+        </div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-header"><div><h3 class="chart-title">Loan Status Distribution</h3><p class="chart-desc">Portfolio health overview</p></div></div>
+          <div class="chart-wrap"><canvas id="loanStatusChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div><h3 class="chart-title">Interest Rate Bands</h3><p class="chart-desc">Distribution by rate range</p></div></div>
+          <div class="chart-wrap"><canvas id="interestRateChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div><h3 class="chart-title">Loan Amount Buckets</h3><p class="chart-desc">Principal amount ranges</p></div></div>
+          <div class="chart-wrap"><canvas id="loanAmtChart"></canvas></div>
+        </div>
+      </div>
+      <!-- Model Performance -->
+      <div class="model-section">
+        <h3 class="model-section-title">🤖 ML Model Performance Comparison</h3>
+        <p class="model-section-desc">Performance metrics for credit risk classification — trained on historical loan data (Logistic Regression, Decision Tree, Random Forest, XGBoost)</p>
+        <div class="model-cards">
+          <div class="model-card">
+            <div class="model-name">Logistic Regression</div>
+            <div class="model-metrics">
+              <div class="metric"><span>Accuracy</span><div class="metric-bar"><div class="metric-fill" style="width:78%;background:#6366f1"></div></div><span>78%</span></div>
+              <div class="metric"><span>ROC-AUC</span><div class="metric-bar"><div class="metric-fill" style="width:81%;background:#6366f1"></div></div><span>0.81</span></div>
+              <div class="metric"><span>Precision</span><div class="metric-bar"><div class="metric-fill" style="width:75%;background:#6366f1"></div></div><span>75%</span></div>
+              <div class="metric"><span>Recall</span><div class="metric-bar"><div class="metric-fill" style="width:72%;background:#6366f1"></div></div><span>72%</span></div>
+            </div>
+          </div>
+          <div class="model-card">
+            <div class="model-name">Decision Tree</div>
+            <div class="model-metrics">
+              <div class="metric"><span>Accuracy</span><div class="metric-bar"><div class="metric-fill" style="width:82%;background:#10b981"></div></div><span>82%</span></div>
+              <div class="metric"><span>ROC-AUC</span><div class="metric-bar"><div class="metric-fill" style="width:83%;background:#10b981"></div></div><span>0.83</span></div>
+              <div class="metric"><span>Precision</span><div class="metric-bar"><div class="metric-fill" style="width:80%;background:#10b981"></div></div><span>80%</span></div>
+              <div class="metric"><span>Recall</span><div class="metric-bar"><div class="metric-fill" style="width:79%;background:#10b981"></div></div><span>79%</span></div>
+            </div>
+          </div>
+          <div class="model-card best-model">
+            <div class="model-badge">⭐ Best Model</div>
+            <div class="model-name">Random Forest</div>
+            <div class="model-metrics">
+              <div class="metric"><span>Accuracy</span><div class="metric-bar"><div class="metric-fill" style="width:91%;background:#f59e0b"></div></div><span>91%</span></div>
+              <div class="metric"><span>ROC-AUC</span><div class="metric-bar"><div class="metric-fill" style="width:94%;background:#f59e0b"></div></div><span>0.94</span></div>
+              <div class="metric"><span>Precision</span><div class="metric-bar"><div class="metric-fill" style="width:89%;background:#f59e0b"></div></div><span>89%</span></div>
+              <div class="metric"><span>Recall</span><div class="metric-bar"><div class="metric-fill" style="width:88%;background:#f59e0b"></div></div><span>88%</span></div>
+            </div>
+          </div>
+          <div class="model-card">
+            <div class="model-name">XGBoost</div>
+            <div class="model-metrics">
+              <div class="metric"><span>Accuracy</span><div class="metric-bar"><div class="metric-fill" style="width:93%;background:#ef4444"></div></div><span>93%</span></div>
+              <div class="metric"><span>ROC-AUC</span><div class="metric-bar"><div class="metric-fill" style="width:96%;background:#ef4444"></div></div><span>0.96</span></div>
+              <div class="metric"><span>Precision</span><div class="metric-bar"><div class="metric-fill" style="width:91%;background:#ef4444"></div></div><span>91%</span></div>
+              <div class="metric"><span>Recall</span><div class="metric-bar"><div class="metric-fill" style="width:90%;background:#ef4444"></div></div><span>90%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: Accounts -->
+    <section class="section" id="section-accounts">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Account Intelligence</h1>
+          <p class="section-subtitle">Portfolio analysis across 1,667 accounts and 5 account types</p>
+        </div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card wide">
+          <div class="chart-header"><div><h3 class="chart-title">Account Type vs Status</h3><p class="chart-desc">Grouped bar: Active, Inactive, Closed per account type</p></div></div>
+          <div class="chart-wrap"><canvas id="accountTypeStatusChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div><h3 class="chart-title">Account Types Share</h3><p class="chart-desc">Count per type</p></div></div>
+          <div class="chart-wrap"><canvas id="accountTypeDonut"></canvas></div>
+        </div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card wide">
+          <div class="chart-header"><div><h3 class="chart-title">Balance Distribution</h3><p class="chart-desc">Account balance ranges across portfolio</p></div></div>
+          <div class="chart-wrap"><canvas id="balanceBarChart"></canvas></div>
+        </div>
+        <div class="info-card">
+          <h3 class="info-title">📊 Data Quality Report</h3>
+          <p class="info-desc">Intentional anomalies present in dataset (real-world simulation)</p>
+          <div class="quality-items">
+            <div class="quality-item"><div class="quality-label">Missing Values (Nulls)</div><div class="quality-bar-wrap"><div class="quality-bar" style="width:60%"></div><span>2%</span></div></div>
+            <div class="quality-item"><div class="quality-label">Typos in Text Fields</div><div class="quality-bar-wrap"><div class="quality-bar" style="width:30%"></div><span>1%</span></div></div>
+            <div class="quality-item"><div class="quality-label">Duplicate Rows</div><div class="quality-bar-wrap"><div class="quality-bar" style="width:30%"></div><span>1%</span></div></div>
+            <div class="quality-item"><div class="quality-label">Inconsistent Formats</div><div class="quality-bar-wrap"><div class="quality-bar" style="width:30%"></div><span>1%</span></div></div>
+            <div class="quality-item"><div class="quality-label">Mixed Date Formats</div><div class="quality-bar-wrap"><div class="quality-bar" style="width:30%"></div><span>1%</span></div></div>
+            <div class="quality-item"><div class="quality-label">Future Dates</div><div class="quality-bar-wrap"><div class="quality-bar" style="width:30%"></div><span>1%</span></div></div>
+            <div class="quality-item"><div class="quality-label">Non-sequential IDs</div><div class="quality-bar-wrap"><div class="quality-bar" style="width:30%"></div><span>1%</span></div></div>
+          </div>
+          <div class="quality-note">Total noise: ~7% (ETL testing ready)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: Fraud Monitor -->
+    <section class="section" id="section-fraud">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Fraud Monitoring Center</h1>
+          <p class="section-subtitle">Real-time fraud risk scoring and anomaly detection insights</p>
+        </div>
+        <div class="alert-badge"><span class="pulse-red"></span>34 High-Risk Accounts</div>
+      </div>
+      <!-- Fraud Risk Simulator -->
+      <div class="fraud-simulator">
+        <div class="simulator-header">
+          <h3>🔍 Interactive Fraud Risk Scorer</h3>
+          <p>Enter transaction details to get an instant fraud risk score based on our Random Forest model logic</p>
+        </div>
+        <div class="simulator-form">
+          <div class="form-group">
+            <label for="txAmount">Transaction Amount (₹)</label>
+            <input type="number" id="txAmount" placeholder="e.g. 500000" min="0" max="50000000" oninput="calcFraudScore()" />
+          </div>
+          <div class="form-group">
+            <label for="txType">Transaction Type</label>
+            <select id="txType" onchange="calcFraudScore()">
+              <option value="deposit">Deposit</option>
+              <option value="withdrawal">Withdrawal</option>
+              <option value="transfer">Transfer</option>
+              <option value="payment">Payment</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="txHour">Transaction Hour (0–23)</label>
+            <input type="number" id="txHour" placeholder="e.g. 2 (late night)" min="0" max="23" oninput="calcFraudScore()" />
+          </div>
+          <div class="form-group">
+            <label for="txFreq">Transactions in last 24h</label>
+            <input type="number" id="txFreq" placeholder="e.g. 15" min="0" max="100" oninput="calcFraudScore()" />
+          </div>
+          <div class="form-group">
+            <label for="loanStatus">Account Loan Status</label>
+            <select id="loanStatus" onchange="calcFraudScore()">
+              <option value="active">Active</option>
+              <option value="overdue">Overdue</option>
+              <option value="paidoff">Paid Off</option>
+              <option value="none">No Loan</option>
+            </select>
+          </div>
+          <div class="score-display">
+            <div class="score-circle" id="scoreCircle">
+              <svg viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#1e2030" stroke-width="10"/>
+                <circle cx="60" cy="60" r="50" fill="none" stroke="url(#scoreGrad)" stroke-width="10"
+                  stroke-dasharray="314" stroke-dashoffset="314" stroke-linecap="round" transform="rotate(-90 60 60)"
+                  id="scoreArc"/>
+                <defs>
+                  <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#10b981"/>
+                    <stop offset="50%" stop-color="#f59e0b"/>
+                    <stop offset="100%" stop-color="#ef4444"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="score-text">
+                <div class="score-num" id="scoreNum">--</div>
+                <div class="score-label">Risk Score</div>
+              </div>
+            </div>
+            <div class="score-verdict" id="scoreVerdict">
+              <div class="verdict-icon">🛡️</div>
+              <div class="verdict-text">Enter details to calculate risk score</div>
+              <div class="verdict-factors" id="verdictFactors"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-header"><div><h3 class="chart-title">Fraud Risk Distribution</h3><p class="chart-desc">Loan portfolio risk segmentation</p></div></div>
+          <div class="chart-wrap"><canvas id="fraudRiskChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div><h3 class="chart-title">Anomaly Types</h3><p class="chart-desc">Types of data quality issues detected</p></div></div>
+          <div class="chart-wrap"><canvas id="anomalyChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div><h3 class="chart-title">Risk by Account Type</h3><p class="chart-desc">Overdue loans per account category</p></div></div>
+          <div class="chart-wrap"><canvas id="riskByTypeChart"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: Project Roadmap -->
+    <section class="section" id="section-roadmap">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Innovation Roadmap</h1>
+          <p class="section-subtitle">The future of BankGuard Analytics: From predictive insights to autonomous fraud prevention</p>
+        </div>
+      </div>
+
+      <div class="roadmap-interactive">
+        <div class="roadmap-track">
+          <div class="roadmap-card" style="--accent: #6366f1">
+            <div class="roadmap-badge">Phase 01</div>
+            <div class="roadmap-icon">🛰️</div>
+            <h3 class="roadmap-card-title">Real-time Intelligence</h3>
+            <p class="roadmap-card-desc">Transitioning from batch processing to real-time event streaming using Apache Kafka and Spark Streaming.</p>
+            <ul class="roadmap-features">
+              <li>Instant transaction scoring</li>
+              <li>Sub-second anomaly detection</li>
+              <li>Push notification alerts</li>
+            </ul>
+            <div class="roadmap-status">IN PROGRESS</div>
+          </div>
+
+          <div class="roadmap-card" style="--accent: #10b981">
+            <div class="roadmap-badge">Phase 02</div>
+            <div class="roadmap-icon">☁️</div>
+            <h3 class="roadmap-card-title">Hyper-Scale Cloud</h3>
+            <p class="roadmap-card-desc">Full cloud-native migration to AWS/Azure using Kubernetes for auto-scaling and serverless inference.</p>
+            <ul class="roadmap-features">
+              <li>Global multi-region deployment</li>
+              <li>Auto-scaling inference nodes</li>
+              <li>99.99% high availability</li>
+            </ul>
+            <div class="roadmap-status">PLANNING</div>
+          </div>
+
+          <div class="roadmap-card" style="--accent: #f59e0b">
+            <div class="roadmap-badge">Phase 03</div>
+            <div class="roadmap-icon">🧠</div>
+            <h3 class="roadmap-card-title">Autonomous ML Ops</h3>
+            <p class="roadmap-card-desc">Implementing an end-to-end AutoML pipeline with continuous training and automated data drift monitoring.</p>
+            <ul class="roadmap-features">
+              <li>Automated model retraining</li>
+              <li>Drift & Bias detection alerts</li>
+              <li>Champion-Challenger A/B testing</li>
+            </ul>
+            <div class="roadmap-status">FUTURE</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tech-stack-section">
+        <h3 class="tech-title">🧰 Core Technology Architecture</h3>
+        <div class="tech-grid">
+          <div class="tech-card">
+            <div class="tech-icon">📊</div>
+            <div class="tech-name">Data Pipeline</div>
+            <div class="tech-role">Processing & ETL</div>
+            <div class="tech-tasks">Excel Cleaning • SQL Integration • Python Pandas</div>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">🗄️</div>
+            <div class="tech-name">Storage Layer</div>
+            <div class="tech-role">Relational Database</div>
+            <div class="tech-tasks">MySQL Schema • Relational Constraints • Indexed Queries</div>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">🐍</div>
+            <div class="tech-name">Inference Engine</div>
+            <div class="tech-role">Machine Learning</div>
+            <div class="tech-tasks">scikit-learn • XGBoost • Flask REST API</div>
+          </div>
+          <div class="tech-card">
+            <div class="tech-icon">📈</div>
+            <div class="tech-name">Decision Support</div>
+            <div class="tech-role">Visual Analytics</div>
+            <div class="tech-tasks">Interactive Charts • Power BI Integration • Live Dashboard</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
