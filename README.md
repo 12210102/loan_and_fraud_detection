@@ -82,11 +82,14 @@ python app.py
 ---
 
 ## 📊 Web Dashboard
-Simply open `html project/index.html` in any browser. It is designed to work with the Python API for real-time predictions.
+
+
+Simply open `html project/index.html` in any browser or visit the [Live Demo](https://loan-and-fraud-detection.onrender.com/). It is designed to work with the Python API for real-time predictions.
 
 ---
 
 ## 🤖 ML Model Results
+
 
 | Model | Accuracy | ROC-AUC | CV-AUC |
 |---|---|---|---|
