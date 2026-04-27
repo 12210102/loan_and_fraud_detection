@@ -357,6 +357,104 @@
           <div class="loan-kpi-pct">Principal Amount</div>
         </div>
       </div>
+      
+      <!-- Interactive Loan Predictor -->
+      <div class="fraud-simulator">
+        <div class="simulator-header">
+          <h3>🏦 Loan Eligibility Predictor</h3>
+          <p>Calls Flask /predict/loan endpoint — XGBoost Model Evaluates Applicant Risk</p>
+        </div>
+        <div class="simulator-form" style="position: relative;">
+          <div class="form-group">
+            <label for="loanAge">Age</label>
+            <input type="number" id="loanAge" placeholder="28" />
+          </div>
+          <div class="form-group">
+            <label for="loanIncome">Annual Income (₹)</label>
+            <input type="number" id="loanIncome" placeholder="600000" />
+          </div>
+          <div class="form-group">
+            <label for="homeOwnership">Home Ownership</label>
+            <select id="homeOwnership">
+              <option value="RENT">RENT</option>
+              <option value="OWN">OWN</option>
+              <option value="MORTGAGE">MORTGAGE</option>
+              <option value="OTHER">OTHER</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="employmentYrs">Employment (years)</label>
+            <input type="number" id="employmentYrs" placeholder="5" />
+          </div>
+          <div class="form-group">
+            <label for="loanPrincipal">Loan Amount (₹)</label>
+            <input type="number" id="loanPrincipal" placeholder="200000" />
+          </div>
+          <div class="form-group">
+            <label for="loanInterest">Interest Rate (%)</label>
+            <input type="number" id="loanInterest" placeholder="12.5" step="0.1" readonly style="background: rgba(255,255,255,0.02); cursor: not-allowed;" />
+          </div>
+          <div class="form-group">
+            <label for="loanIntent">Loan Intent</label>
+            <select id="loanIntent" onchange="updateIntentData()">
+              <option value="Personal">Personal</option>
+              <option value="Education">Education</option>
+              <option value="Medical">Medical</option>
+              <option value="Venture">Venture</option>
+              <option value="HomeImprovement">Home Improvement</option>
+              <option value="DebtConsolidation">Debt Consolidation</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="creditHistory">Credit History (yrs)</label>
+            <input type="number" id="creditHistory" placeholder="3" />
+          </div>
+          
+          <div style="grid-column: 1 / -1; margin-top: 10px;">
+            <div id="requiredDocsBox" style="background: rgba(99,102,241,0.05); border: 1px solid rgba(99,102,241,0.2); padding: 12px; border-radius: 8px;">
+              <div style="font-size: 11px; color: var(--accent-indigo); font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">📋 Required Documentation</div>
+              <div id="requiredDocsText" style="font-size: 13px; color: var(--text-secondary);">Select a Loan Intent to see required documents.</div>
+            </div>
+          </div>
+
+          <div class="form-group" style="grid-column: 1 / -1; margin-top: 10px;">
+            <button class="predict-btn" style="width: 100%;" onclick="predictLoanRisk()">Check Loan Eligibility &rarr;</button>
+          </div>
+          
+          <div class="score-display" id="loanResult" style="display:none; width:100%; margin-top:20px; border-top:1px solid var(--border); padding-top:24px;">
+            <div class="score-circle">
+              <svg viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#1e2030" stroke-width="10"/>
+                <circle cx="60" cy="60" r="50" fill="none" stroke="url(#scoreGrad)" stroke-width="10"
+                  stroke-dasharray="314" stroke-dashoffset="314" stroke-linecap="round" transform="rotate(-90 60 60)"
+                  id="loanScoreArc"/>
+              </svg>
+              <div class="score-text">
+                <div class="score-num" id="loanScoreNum">--</div>
+                <div class="score-label">Prob (%)</div>
+              </div>
+            </div>
+            <div class="score-verdict" style="flex: 1;">
+              <div class="verdict-icon" id="loanVerdictIcon">🛡️</div>
+              <div class="verdict-text" id="loanVerdictText">Calculating...</div>
+              <div class="verdict-factors" id="loanVerdictFactors"></div>
+            </div>
+            
+            <!-- Added connected Fraud Monitor Assessment for the Application -->
+            <div id="applicationFraudBox" style="min-width: 200px; background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.2); padding: 16px; border-radius: 8px;">
+              <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Application Fraud Check</div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div id="fraudCheckIcon" style="font-size: 20px;">🕵️</div>
+                <div>
+                  <div id="fraudCheckStatus" style="font-size: 14px; font-weight: 700; color: var(--text-primary);">Scanning...</div>
+                  <div id="fraudCheckDesc" style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Analyzing application anomalies</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="charts-row">
         <div class="chart-card">
           <div class="chart-header"><div><h3 class="chart-title">Loan Status Distribution</h3><p class="chart-desc">Portfolio health overview</p></div></div>
@@ -371,50 +469,7 @@
           <div class="chart-wrap"><canvas id="loanAmtChart"></canvas></div>
         </div>
       </div>
-      <!-- Model Performance -->
-      <div class="model-section">
-        <h3 class="model-section-title">🤖 ML Model Performance Comparison</h3>
-        <p class="model-section-desc">Performance metrics for credit risk classification — trained on historical loan data (Logistic Regression, Decision Tree, Random Forest, XGBoost)</p>
-        <div class="model-cards">
-          <div class="model-card">
-            <div class="model-name">Logistic Regression</div>
-            <div class="model-metrics">
-              <div class="metric"><span>Accuracy</span><div class="metric-bar"><div class="metric-fill" style="width:78%;background:#6366f1"></div></div><span>78%</span></div>
-              <div class="metric"><span>ROC-AUC</span><div class="metric-bar"><div class="metric-fill" style="width:81%;background:#6366f1"></div></div><span>0.81</span></div>
-              <div class="metric"><span>Precision</span><div class="metric-bar"><div class="metric-fill" style="width:75%;background:#6366f1"></div></div><span>75%</span></div>
-              <div class="metric"><span>Recall</span><div class="metric-bar"><div class="metric-fill" style="width:72%;background:#6366f1"></div></div><span>72%</span></div>
-            </div>
-          </div>
-          <div class="model-card">
-            <div class="model-name">Decision Tree</div>
-            <div class="model-metrics">
-              <div class="metric"><span>Accuracy</span><div class="metric-bar"><div class="metric-fill" style="width:82%;background:#10b981"></div></div><span>82%</span></div>
-              <div class="metric"><span>ROC-AUC</span><div class="metric-bar"><div class="metric-fill" style="width:83%;background:#10b981"></div></div><span>0.83</span></div>
-              <div class="metric"><span>Precision</span><div class="metric-bar"><div class="metric-fill" style="width:80%;background:#10b981"></div></div><span>80%</span></div>
-              <div class="metric"><span>Recall</span><div class="metric-bar"><div class="metric-fill" style="width:79%;background:#10b981"></div></div><span>79%</span></div>
-            </div>
-          </div>
-          <div class="model-card best-model">
-            <div class="model-badge">⭐ Best Model</div>
-            <div class="model-name">Random Forest</div>
-            <div class="model-metrics">
-              <div class="metric"><span>Accuracy</span><div class="metric-bar"><div class="metric-fill" style="width:91%;background:#f59e0b"></div></div><span>91%</span></div>
-              <div class="metric"><span>ROC-AUC</span><div class="metric-bar"><div class="metric-fill" style="width:94%;background:#f59e0b"></div></div><span>0.94</span></div>
-              <div class="metric"><span>Precision</span><div class="metric-bar"><div class="metric-fill" style="width:89%;background:#f59e0b"></div></div><span>89%</span></div>
-              <div class="metric"><span>Recall</span><div class="metric-bar"><div class="metric-fill" style="width:88%;background:#f59e0b"></div></div><span>88%</span></div>
-            </div>
-          </div>
-          <div class="model-card">
-            <div class="model-name">XGBoost</div>
-            <div class="model-metrics">
-              <div class="metric"><span>Accuracy</span><div class="metric-bar"><div class="metric-fill" style="width:93%;background:#ef4444"></div></div><span>93%</span></div>
-              <div class="metric"><span>ROC-AUC</span><div class="metric-bar"><div class="metric-fill" style="width:96%;background:#ef4444"></div></div><span>0.96</span></div>
-              <div class="metric"><span>Precision</span><div class="metric-bar"><div class="metric-fill" style="width:91%;background:#ef4444"></div></div><span>91%</span></div>
-              <div class="metric"><span>Recall</span><div class="metric-bar"><div class="metric-fill" style="width:90%;background:#ef4444"></div></div><span>90%</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
+
     </section>
 
     <!-- SECTION: Accounts -->
@@ -476,6 +531,10 @@
           <div class="form-group">
             <label for="txAmount">Transaction Amount (₹)</label>
             <input type="number" id="txAmount" placeholder="e.g. 500000" min="0" max="50000000" oninput="calcFraudScore()" />
+          </div>
+          <div class="form-group">
+            <label for="loanBalance">Outstanding Loan Balance (₹)</label>
+            <input type="number" id="loanBalance" placeholder="e.g. 150000" min="0" oninput="calcFraudScore()" />
           </div>
           <div class="form-group">
             <label for="txType">Transaction Type</label>

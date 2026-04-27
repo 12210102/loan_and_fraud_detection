@@ -638,6 +638,25 @@ tbody td {
 .form-group input:focus, .form-group select:focus { border-color: var(--accent-indigo); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
 .form-group input::placeholder { color: var(--text-muted); }
 
+.predict-btn {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  height: 40px;
+}
+.predict-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-indigo);
+  color: var(--accent-indigo);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+}
+
 .score-display {
   grid-column: span 2;
   display: flex;

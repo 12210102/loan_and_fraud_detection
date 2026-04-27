@@ -541,6 +541,7 @@ const THR_MODERATE  =  420000;  // ₹4.2 Lakh
 
 function calcFraudScore() {
   const amount     = parseFloat(document.getElementById('txAmount').value) || 0;
+  const loanBal    = parseFloat(document.getElementById('loanBalance').value) || 0;
   const type       = document.getElementById('txType').value;
   const hour       = parseInt(document.getElementById('txHour').value,10)  || 12;
   const freq       = parseInt(document.getElementById('txFreq').value,10)  || 0;
@@ -549,6 +550,17 @@ function calcFraudScore() {
 
   let score = 0;
   const factors = [];
+
+  // Loan Balance checks
+  if (loanBal > 0) {
+    if (amount > loanBal) { 
+      score += 35; 
+      factors.push({text:'Txn > Loan Balance', cls:'risk'}); 
+    } else if (amount > loanBal * 0.8) { 
+      score += 20; 
+      factors.push({text:'High % of Loan Balance', cls:'warn'}); 
+    }
+  }
 
   if (amount > THR_VERY_HIGH)    { score+=30; factors.push({text:'Very High Amount (>₹42L)',cls:'risk'}); }
   else if (amount > THR_HIGH)    { score+=20; factors.push({text:'High Amount (>₹17L)',     cls:'warn'}); }
@@ -669,4 +681,193 @@ document.addEventListener('DOMContentLoaded', () => {
   },{threshold:0.2});
   const loanSection = document.getElementById('section-loans');
   if (loanSection) loanObserver.observe(loanSection);
+
+  // Initialize Loan Predictor default data
+  if(document.getElementById('loanIntent')) updateIntentData();
 });
+
+// ================================================
+// LOAN ELIGIBILITY PREDICTOR
+// ================================================
+const intentData = {
+  Personal: { rate: 12.5, docs: 'ID Proof, Income Proof, Bank Statements (last 3 months)' },
+  Education: { rate: 8.5, docs: 'Admission Letter, Fee Structure, ID Proof, Co-applicant Income Proof' },
+  Medical: { rate: 10.0, docs: 'Hospital Estimate/Bills, ID Proof, Income Proof' },
+  Venture: { rate: 14.0, docs: 'Business Plan, Registration Docs, P&L Statement, ID Proof' },
+  HomeImprovement: { rate: 9.5, docs: 'Property Papers, Contractor Estimate, ID Proof, Income Proof' },
+  DebtConsolidation: { rate: 11.0, docs: 'Existing Loan Statements, Foreclosure Letters, Income Proof' }
+};
+
+function updateIntentData() {
+  const intent = document.getElementById('loanIntent').value;
+  const data = intentData[intent] || intentData['Personal'];
+  document.getElementById('loanInterest').value = data.rate;
+  
+  const docsList = data.docs.split(', ').map(d => `<li>✅ ${d}</li>`).join('');
+  document.getElementById('requiredDocsText').innerHTML = `<ul style="list-style:none; padding:0; margin:4px 0 0 0; display:flex; flex-direction:column; gap:4px;">${docsList}</ul>`;
+}
+
+async function predictLoanRisk() {
+  const age = parseInt(document.getElementById('loanAge').value, 10) || 28;
+  const income = parseFloat(document.getElementById('loanIncome').value) || 0;
+  const homeOwnership = document.getElementById('homeOwnership').value;
+  const employment = parseFloat(document.getElementById('employmentYrs').value) || 0;
+  const principal = parseFloat(document.getElementById('loanPrincipal').value) || 0;
+  const interest = parseFloat(document.getElementById('loanInterest').value) || 12.5;
+  const intent = document.getElementById('loanIntent').value;
+  const creditHist = parseFloat(document.getElementById('creditHistory').value) || 0;
+
+  if (!principal || !income) return;
+
+  // Map requested UI fields to Backend Model Features
+  const intentToAccType = { 'Personal':1, 'Education':2, 'Medical':1, 'Venture':4, 'HomeImprovement':3, 'DebtConsolidation':1 };
+  
+  const reqBody = {
+    principal_amount_inr: principal,
+    interest_rate: interest / 100, // percentage to decimal
+    loan_to_balance_ratio: Math.min(principal / income, 2.0), // heuristic mapped
+    txn_frequency_90d: Math.round(5 + employment * 2), // proxy based on employment
+    avg_txn_amount_inr: (income / 12) * 0.2, // heuristic based on income
+    account_type_id: intentToAccType[intent] || 1,
+    loan_duration_days: 1095 // proxy 3 years
+  };
+
+  const resDiv = document.getElementById('loanResult');
+  resDiv.style.display = 'flex';
+  document.getElementById('loanVerdictText').textContent = 'Calculating...';
+  document.getElementById('loanVerdictFactors').innerHTML = '';
+  
+  // Set initial fraud box scanning state
+  const fraudBox = document.getElementById('applicationFraudBox');
+  fraudBox.style.background = 'rgba(239,68,68,0.05)';
+  fraudBox.style.borderColor = 'rgba(239,68,68,0.2)';
+  document.getElementById('fraudCheckIcon').textContent = '🕵️';
+  document.getElementById('fraudCheckStatus').textContent = 'Scanning...';
+  document.getElementById('fraudCheckStatus').style.color = 'var(--text-primary)';
+  document.getElementById('fraudCheckDesc').textContent = 'Analyzing application anomalies';
+
+  try {
+    // Try hitting the Flask API
+    const response = await fetch('http://127.0.0.1:5000/api/predict/loan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reqBody)
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      displayLoanResult(data.default_percentage, data.risk_class, data.model_used);
+      evaluateApplicationFraud(age, income, employment, principal, creditHist);
+      return;
+    }
+  } catch (e) {
+    console.log("API offline, falling back to heuristic model");
+  }
+
+  // Fallback heuristic if API is unavailable
+  let prob = 5; // base 5% probability
+  if (principal / income > 0.8) prob += 20;
+  else if (principal / income > 0.5) prob += 10;
+  
+  if (interest > 12) prob += 25;
+  else if (interest > 8) prob += 15;
+  
+  if (employment < 2) prob += 15;
+  
+  if (principal > 2000000) prob += 10;
+
+  prob = Math.min(prob, 95);
+  
+  let riskClass = 'LOW';
+  if (prob >= 75) riskClass = 'CRITICAL';
+  else if (prob >= 50) riskClass = 'HIGH';
+  else if (prob >= 25) riskClass = 'MODERATE';
+  
+  setTimeout(() => {
+    displayLoanResult(prob, riskClass, 'Heuristic Fallback');
+    evaluateApplicationFraud(age, income, employment, principal, creditHist);
+  }, 600);
+}
+
+function evaluateApplicationFraud(age, income, employment, principal, creditHist) {
+  let fraudScore = 0;
+  let anomaly = '';
+  let flag = 'CLEAN';
+
+  if (age < 22 && income > 1500000) {
+    fraudScore += 40; anomaly = 'Age/Income mismatch anomaly'; flag = 'SUSPICIOUS';
+  } else if (creditHist === 0 && principal > 1000000) {
+    fraudScore += 35; anomaly = 'High amount with no credit history'; flag = 'SUSPICIOUS';
+  } else if (principal > income * 8) {
+    fraudScore += 50; anomaly = 'Principal exceeds 8x annual income'; flag = 'HIGH RISK';
+  } else if (employment > 0 && age - employment < 16) {
+    fraudScore += 60; anomaly = 'Impossible employment duration for age'; flag = 'HIGH RISK';
+  }
+
+  const box = document.getElementById('applicationFraudBox');
+  const icon = document.getElementById('fraudCheckIcon');
+  const status = document.getElementById('fraudCheckStatus');
+  const desc = document.getElementById('fraudCheckDesc');
+
+  if (fraudScore === 0) {
+    box.style.background = 'rgba(16,185,129,0.05)';
+    box.style.borderColor = 'rgba(16,185,129,0.2)';
+    icon.textContent = '✅';
+    status.textContent = 'Verified & Clean';
+    status.style.color = '#10b981';
+    desc.textContent = 'No fraud anomalies detected';
+  } else if (flag === 'SUSPICIOUS') {
+    box.style.background = 'rgba(245,158,11,0.05)';
+    box.style.borderColor = 'rgba(245,158,11,0.2)';
+    icon.textContent = '⚠️';
+    status.textContent = 'Suspicious Profile';
+    status.style.color = '#f59e0b';
+    desc.textContent = anomaly;
+  } else {
+    box.style.background = 'rgba(239,68,68,0.05)';
+    box.style.borderColor = 'rgba(239,68,68,0.2)';
+    icon.textContent = '🚨';
+    status.textContent = 'Fraud Alert';
+    status.style.color = '#ef4444';
+    desc.textContent = anomaly;
+    
+    // Auto-override default risk visually if high fraud risk
+    setTimeout(() => {
+      document.getElementById('loanVerdictText').textContent = 'Rejected (Fraud Prevention)';
+      document.getElementById('loanVerdictText').style.color = '#ef4444';
+      document.getElementById('loanVerdictIcon').textContent = '🚫';
+    }, 100);
+  }
+}
+
+function displayLoanResult(prob, riskClass, modelName) {
+  const arc = document.getElementById('loanScoreArc');
+  if (arc) arc.style.strokeDashoffset = 314 - (314 * prob / 100);
+  document.getElementById('loanScoreNum').textContent = Math.round(prob);
+
+  const icons = { 'LOW': '✅', 'MODERATE': '⚠️', 'HIGH': '🚨', 'CRITICAL': '🔴' };
+  const texts = {
+    'LOW': 'Low Default Risk — Eligible for Loan',
+    'MODERATE': 'Moderate Risk — Further Review Required',
+    'HIGH': 'High Risk — Likely to Default',
+    'CRITICAL': 'Critical Risk — Application Denied'
+  };
+  const clrs = { 'LOW': '#10b981', 'MODERATE': '#f59e0b', 'HIGH': '#ef4444', 'CRITICAL': '#dc2626' };
+
+  const iconEl = document.getElementById('loanVerdictIcon');
+  const textEl = document.getElementById('loanVerdictText');
+  
+  iconEl.textContent = icons[riskClass] || '❓';
+  textEl.textContent = texts[riskClass] || 'Unknown Risk';
+  textEl.style.color = clrs[riskClass] || '#e8eaf6';
+
+  let factorsHTML = `<span class="factor-chip" style="background:rgba(99,102,241,0.1); color:var(--accent-indigo); border: 1px solid rgba(99,102,241,0.2);">Model: ${modelName || 'XGBoost'}</span>`;
+  
+  if (prob > 50) {
+     factorsHTML += `<span class="factor-chip risk" style="background:rgba(239,68,68,0.1); color:#ef4444; border: 1px solid rgba(239,68,68,0.2);">High Probability</span>`;
+  } else {
+     factorsHTML += `<span class="factor-chip" style="background:rgba(16,185,129,0.1); color:#10b981; border: 1px solid rgba(16,185,129,0.2);">Safe Range</span>`;
+  }
+
+  document.getElementById('loanVerdictFactors').innerHTML = factorsHTML;
+}
