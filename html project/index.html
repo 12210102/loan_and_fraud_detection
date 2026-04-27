@@ -367,7 +367,7 @@
         <div class="simulator-form" style="position: relative;">
           <div class="form-group">
             <label for="loanAge">Age</label>
-            <input type="number" id="loanAge" placeholder="28" />
+            <input type="number" id="loanAge" placeholder="28" oninput="checkAgeForNominee()" />
           </div>
           <div class="form-group">
             <label for="loanIncome">Annual Income (₹)</label>
@@ -408,6 +408,17 @@
           <div class="form-group">
             <label for="creditHistory">Credit History (yrs)</label>
             <input type="number" id="creditHistory" placeholder="3" />
+          </div>
+
+          <div class="form-group" id="nomineeGroup" style="display: none; border-left: 2px solid var(--accent-indigo); padding-left: 10px;">
+            <label for="loanNominee">Nominee (Age 60+)</label>
+            <select id="loanNominee">
+              <option value="None">-- Select Nominee --</option>
+              <option value="Spouse">Spouse</option>
+              <option value="Son">Son</option>
+              <option value="Daughter">Daughter</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
           
           <div style="grid-column: 1 / -1; margin-top: 10px;">
