@@ -753,12 +753,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // LOAN ELIGIBILITY PREDICTOR
 // ================================================
 const intentData = {
-  Personal: { rate: 12.5, docs: 'ID Proof, Income Proof, Bank Statements (last 3 months)' },
-  Education: { rate: 8.5, docs: 'Admission Letter, Fee Structure, ID Proof, Co-applicant Income Proof' },
-  Medical: { rate: 10.0, docs: 'Hospital Estimate/Bills, ID Proof, Income Proof' },
-  Venture: { rate: 14.0, docs: 'Business Plan, Registration Docs, P&L Statement, ID Proof' },
-  HomeImprovement: { rate: 9.5, docs: 'Property Papers, Contractor Estimate, ID Proof, Income Proof' },
-  DebtConsolidation: { rate: 11.0, docs: 'Existing Loan Statements, Foreclosure Letters, Income Proof' }
+  Personal: { rate: 12.5, docs: 'ID Proof, Salary Slip (last 3 months), Income Proof, Bank Statements (last 3 months)' },
+  Education: { rate: 8.5, docs: 'Admission Letter, Fee Structure, ID Proof, Salary Slip (last 3 months), Co-applicant Income Proof' },
+  Medical: { rate: 10.0, docs: 'Hospital Estimate/Bills, ID Proof, Salary Slip (last 3 months), Income Proof' },
+  Venture: { rate: 14.0, docs: 'Business Plan, Registration Docs, P&L Statement, ID Proof, Salary Slip (last 3 months)' },
+  HomeImprovement: { rate: 9.5, docs: 'Property Papers, Contractor Estimate, ID Proof, Salary Slip (last 3 months), Income Proof' },
+  DebtConsolidation: { rate: 11.0, docs: 'Existing Loan Statements, Foreclosure Letters, Salary Slip (last 3 months), Income Proof' },
+  HomeLoan: { rate: 8.0, docs: 'Property Papers, Sale Agreement, ID Proof, Salary Slip (last 3 months), Income Proof, Bank Statements (last 6 months), NOC from Builder' }
 };
 
 function updateIntentData() {
@@ -771,15 +772,10 @@ function updateIntentData() {
 }
 
 function checkAgeForNominee() {
-  const age = parseInt(document.getElementById('loanAge').value, 10) || 0;
+  // Nominee is required for all ages — always visible
   const nomineeGroup = document.getElementById('nomineeGroup');
   if (!nomineeGroup) return;
-  if (age >= 60) {
-    nomineeGroup.style.display = 'flex';
-  } else {
-    nomineeGroup.style.display = 'none';
-    document.getElementById('loanNominee').value = 'None';
-  }
+  nomineeGroup.style.display = 'flex';
 }
 
 async function predictLoanRisk() {
@@ -853,8 +849,8 @@ async function predictLoanRisk() {
 
   const nomineeEl = document.getElementById('loanNominee');
   const nominee = nomineeEl ? nomineeEl.value : 'None';
-  if (age >= 60 && nominee === 'None') prob += 40; // High risk if retired with no nominee
-  else if (age >= 60 && nominee !== 'None') prob -= 10; // Mitigate risk if nominee is provided
+  if (nominee === 'None') prob += 20; // Higher risk when no nominee provided (any age)
+  else prob -= 5; // Slight risk reduction when nominee is present
 
   prob = Math.min(prob, 95);
 
@@ -877,8 +873,8 @@ function evaluateApplicationFraud(age, income, employment, principal, creditHist
   const nomineeEl = document.getElementById('loanNominee');
   const nominee = nomineeEl ? nomineeEl.value : 'None';
 
-  if (age >= 60 && nominee === 'None') {
-    fraudScore += 50; anomaly = 'Retiree age (60+) without Nominee'; flag = 'HIGH RISK';
+  if (nominee === 'None') {
+    fraudScore += 30; anomaly = 'No Nominee provided for applicant'; flag = 'SUSPICIOUS';
   } else if (age < 22 && income > 1500000) {
     fraudScore += 40; anomaly = 'Age/Income mismatch anomaly'; flag = 'SUSPICIOUS';
   } else if (creditHist === 0 && principal > 1000000) {
